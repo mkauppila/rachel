@@ -1,5 +1,3 @@
-import string
-
 import irc
 
 def parse_messages_from(data):
@@ -28,13 +26,13 @@ def parse_message(message):
 
 	# parse prefix
 	if message[0] == ':':
-		end_index = string.find(message, ' ')
+		end_index = message.find(' ')
 		prefix = message[1:end_index]
 		# remove the parsed section of the message and the whitespace
 		message = message[end_index + 1:]
 	
 	# parse trailing
-	start_index_of_trailing = string.find(message, ':')
+	start_index_of_trailing = message.find(':')
 	if start_index_of_trailing != -1: # has trailing
 		trailing = message[start_index_of_trailing + 1:]
 		# update the message, only command and params left
