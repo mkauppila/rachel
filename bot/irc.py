@@ -96,6 +96,10 @@ class IRCClient(object):
 	def send_join_channel(self, channel_name):
 		command  = 'JOIN #%s' % channel_name
 		self.send_command_to_server(command)
+
+	def send_pong_with_response(self, response):
+		command = 'PONG %s' % response
+		self.send_command_to_server(command)
 		
 	#client.send_default_nick()
 	#client.send_default_user()

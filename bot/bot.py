@@ -37,6 +37,14 @@ client.send_join_channel('markus_vs_warkus')
 def handle_message(message):
 	logger.debug('Handle message: %s', message)
 
+	# TODO(mk): handle direct messages (trailing :booby: blaa)
+	# TODO(mk): find bots name from the discussion and 
+	#			make it responds to them. Eliza style?
+
+	if message.command:
+		if message.command == 'PING':
+			client.send_pong_with_response(message.trailing)
+
 	if message.trailing:
 		print message.trailing
 
@@ -45,6 +53,5 @@ while True:
 	for message in messages:
 		handle_message(message)
 
-	#TODO(mk): handle command (handles the commands returned by the server)
 
 client.disconnect()
