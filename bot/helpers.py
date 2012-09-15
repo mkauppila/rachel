@@ -1,6 +1,6 @@
 import string
 
-from irc import Message
+import irc
 
 def parse_messages_from(data):
 	""" Separate server messages 
@@ -47,4 +47,4 @@ def parse_message(message):
 	command = command_and_params[0]
 	params = command_and_params[1:]
 
-	return Message(prefix, command, params, trailing)
+	return irc.Message(prefix, command, params, trailing)
