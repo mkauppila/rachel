@@ -15,25 +15,30 @@ class Message(object):
 		self.parameters = parameters
 		self.trailing = trailing
 
-	# TODO(mk): add description
+	def __str__(self):
+		return "%s %s %s %s" % (self.prefix, self.command,
+								self.parameters, self.trailing)
+
 
 def add_command_terminator(command):
 	""" Add terminator characters.
 
-	Adds \r\n to the end of the command.
+	Adds '\r\n' to the end of the command.
 
 	Return:
 		Properly terminated command, ready for sending
 	"""
 	return command + '\r\n';
 
+
 class IRCClient(object):
 	""" Handles communication with the IRC server
 	"""
 
-	def __init__(self, host, port):
+	def __init__(self, host, port, logger):
 		self.host = host
 		self.port = port
+		self.logger = logger
 
 		self.connection = None
 		self.connect()
@@ -46,11 +51,14 @@ class IRCClient(object):
 		address = (self.host, self.port)
 		timeout = None
 		self.connection = socket.create_connection(address, timeout)
+		self.logger.info('Connected to %s:%s', self.host, self.port)
 
 	def disconnect(self):
 		self.connection.close()
+		sel.logger.info('Disconnected from %s', self.host)
 
 	def send_command_to_server(self, command):
+		self.logger.debug('send command: %s', command)
 		command = add_command_terminator(command)
 		self.connection.send(command)
 
