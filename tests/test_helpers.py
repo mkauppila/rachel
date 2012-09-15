@@ -14,8 +14,8 @@ class TestHelper(unittest.TestCase):
 		prefix = 'zelazny.freenode.net'
 		command = '372'
 		parameters = ['booby']
-		trailing = ':- Thank you for using freenode!'
-		server_message = ':%s %s %s %s' % (prefix, command, ''.join(parameters), trailing)
+		trailing = '- Thank you for using freenode!'
+		server_message = ':%s %s %s :%s' % (prefix, command, ''.join(parameters), trailing)
 		message = helpers.parse_message(server_message)
 
 		self.assertEqual(message.prefix, prefix, 
@@ -30,8 +30,8 @@ class TestHelper(unittest.TestCase):
 	def test_parse_command_and_parameters(self):
 		command = '353'
 		parameters = ['booby', '@', '#markus_vs_warkus']
-		trailing = ':- Thank you for using freenode!'
-		server_message = '%s %s %s' % (command, ' '.join(parameters), trailing)
+		trailing = '- Thank you for using freenode!'
+		server_message = '%s %s :%s' % (command, ' '.join(parameters), trailing)
 		message = helpers.parse_message(server_message)
 
 
@@ -60,8 +60,8 @@ class TestHelper(unittest.TestCase):
 	def test_parse_all_but_prefix(self):
 		command = '366'
 		parameters = ['booby', '#markus_vs_warkus']
-		trailing = ':End of /NAMES list.'
-		server_message = '%s %s %s' % (command, ' '.join(parameters), trailing)
+		trailing = 'End of /NAMES list.'
+		server_message = '%s %s :%s' % (command, ' '.join(parameters), trailing)
 		message = helpers.parse_message(server_message)
 
 		self.assertEqual(message.command, command,
@@ -73,8 +73,8 @@ class TestHelper(unittest.TestCase):
 
 	def test_parse_command_and_trailing(self):
 		command = 'PING'
-		trailing = ':zelazny.freenode.net'
-		server_message = '%s %s' % (command, trailing)
+		trailing = 'zelazny.freenode.net'
+		server_message = '%s :%s' % (command, trailing)
 		message = helpers.parse_message(server_message)
 
 		self.assertEqual(message.command, command,

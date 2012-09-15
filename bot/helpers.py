@@ -36,7 +36,7 @@ def parse_message(message):
 	# parse trailing
 	start_index_of_trailing = string.find(message, ':')
 	if start_index_of_trailing != -1: # has trailing
-		trailing = message[start_index_of_trailing:]
+		trailing = message[start_index_of_trailing + 1:]
 		# update the message, only command and params left
 		message = message[0:start_index_of_trailing]
 
