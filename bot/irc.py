@@ -63,12 +63,15 @@ class IRCClient(object):
 		self.connection.send(command)
 
 	def get_messages(self):
-		""" This is blocking method 
-		Might block if there's no messages in the queue?
+		""" Receive messages from the server.
 
-		Returns: (should be yield?)
-			List of message objects 
-			None if error happened and no message in queue
+		The method receives data from the server through
+		the connection and parses it into Message
+		objects.
+
+		Returns:
+			List of parsed Message objects or None if there's
+			network problems.
 		"""
 		data = self.connection.recv(4096)
 		if not data:
@@ -100,15 +103,4 @@ class IRCClient(object):
 	def send_pong_with_response(self, response):
 		command = 'PONG %s' % response
 		self.send_command_to_server(command)
-		
-	#client.send_default_nick()
-	#client.send_default_user()
-
-	#client.send_nick(nick) # used when nick changes
-	#client.send_user(nick, real_name)
-
-	#client.send_pong()
-	#client.send_join_channel(channel_name)
-
-	#client.parsed_message() -> returns struct
-
+	
