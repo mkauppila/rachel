@@ -46,10 +46,20 @@ def parse_nick(nick):
 	else:
 		return (nick, None)
 
+def parse_nick_from_prefix(prefix):
+	""" Parse nick from the beginning of message prefix
+
+	Used by JOIN and PART message handlers.
+	"""
+	end_index  = prefix.find('!')
+	return prefix[0:end_index]
+
+
 users = {}
 
 def add_users(message):
-	""" Adds users of the channel based on NAMES list """
+	""" Adds users of the channel based on NAMES list
+	"""
 	channel_name = message.parameters.pop()
 	logger.debug('names channel name: %s', channel_name)
 
@@ -57,8 +67,31 @@ def add_users(message):
 	for full_nick in full_nicks:
 		nick, mode = parse_nick(full_nick)
 
+		# TODO(mk): if nick is already added, just update the mode
+
 		users[nick] = irc.UserInfo(nick, mode)
 
+def handle_join(message):
+	nick = parse_nick_from_prefix(message.prefix)
+	logger.debug("nick joined: %s", nick)
+
+	# Skip over if the bot itself joins
+	if nick == 'booby':
+		return 
+
+	# check if the nick is eligible for +v or +o
+	#	set the rights to mode variable
+	mode = None
+
+	users[nick] = irc.UserInfo(nick, mode)
+	client.send_irc_message(channel_name, 'Hello %s' % nick)
+
+def handle_part(message):
+	nick = parse_nick_from_prefix(message.prefix)
+	logger.debug("nick parted: %s", nick)
+	if users.has_key(nick):
+		del users[nick]
+		logger.debug('removed "%s" from the users list' % nick)
 
 def handle_irc_messages(message):
 	""" Handle chat messages 
@@ -74,17 +107,15 @@ def handle_irc_messages(message):
 	# Did I get direct message?
 	got_direct_message = trailing.find('booby') == 0
 	if got_direct_message:
-		logger.info('Somebody is talking to me!')
+		client.send_irc_message(channel_name, "I'm not talking to you!")
+
 		# parse the trailing further and do something
 	else:
 		# if trailing == VERSION, just skip
 		# skip all not coming from right channel?
-		logger.info('Im a real person, not a bot!')
 		# Eliza style?
+		client.send_irc_message(channel_name, "Hey! Don't talk about me!")
 
-actions = {'PING' : client.send_pong_with_response,
-		   'PRIVMSG' : handle_irc_messages,
-		   '353' : add_users }
 
 def handle_message(message):
 	logger.debug('Handle message: %s', message)
