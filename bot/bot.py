@@ -1,13 +1,36 @@
 #! /usr/bin/python
 
 import logging
+import optparse
+import sys
 
 import irc
 import parse
-
 import config
 
-config.load_configuration_from('bot.conf')
+option_parser = optparse.OptionParser()
+option_parser.add_option('-c', '--configuration-file',
+						 action='store',
+						 type='string',
+						 dest='configuration_file',
+						 help='select configuration file', 
+						 metavar='example.conf')
+
+option_parser.add_option('-v', '--version',
+						 action='store_true',
+						 dest='version',
+						 help='show version information')
+
+(options, args) = option_parser.parse_args()
+
+if (options.version):
+	print "bot version 0.1"
+	sys.exit(0)
+
+configuration_file = config.default_configuration_file
+if options.configuration_file:
+	configuration_file = options.configuration_file
+config.load_configuration_from(configuration_file)
 
 HOST = config.host
 PORT = config.port
