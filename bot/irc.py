@@ -118,6 +118,10 @@ class IRCClient(object):
 		command = 'PRIVMSG #%s :%s' % (channel, message)
 		self.send_command_to_server(command)
 
+	def send_set_mode(self, channel_name, nick, mode):
+		command = "MODE #%s %s %s" % (channel_name, mode, nick)
+		self.send_command_to_server(command)
+
 	# Send response commands
 
 	def send_pong_with_response(self, original_message):
