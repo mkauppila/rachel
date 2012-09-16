@@ -19,6 +19,16 @@ class Message(object):
 		return "%s %s %s %s" % (self.prefix, self.command,
 								self.parameters, self.trailing)
 
+class UserInfo(object):
+	""" Holds information about IRC user
+	"""
+	def __init__(self, nick, mode):
+		self.nick = nick
+		self.mode = mode
+
+	def __str__(self):
+		return mode + nick
+
 
 class IRCClient(object):
 	""" Handles communication with a IRC server.
