@@ -42,7 +42,6 @@ def handle_names(message):
 	for full_nick in full_nicks:
 		nick, mode = parse.parse_nick(full_nick)
 
-
 		if users.has_key(nick):
 			users[nick].mode = mode
 		else:
@@ -54,17 +53,14 @@ def handle_join(message):
 	logger.debug("nick joined: %s", nick)
 
 	# Skip over if the bot itself joins
-	if nick == 'booby':
+	if nick == config.bots_name:
 		return 
 
-	# check if the nick is eligible for +v or +o
-	#	set the rights to mode variable
 	mode = None
-
 	if nick in op_list:
 		mode = 'o'
 		client.send_set_mode(channel_name, nick, "+o")
-	if nick in voice_list:
+	elif nick in voice_list:
 		mode = 'v'
 		client.send_set_mode(channel_name, nick, "+v")
 
@@ -91,13 +87,14 @@ def handle_irc_messages(message):
 		    message received from the server.
 	"""
 	trailing = message.trailing
+	highlighted_name = "%s:" % config.bots_name
 	# Did I get direct message?
-	got_direct_message = trailing.find('booby:') == 0
+	got_direct_message = trailing.find(highlighted_name) == 0
 	if got_direct_message:
 		client.send_irc_message(channel_name, "I'm not talking to you!")
 
 		# parse the trailing further and do something
-	elif trailing.find('booby') > 0:
+	elif trailing.find(config.bots_name) > 0:
 		# if trailing == VERSION, just skip
 		# skip all not coming from right channel?
 		# Eliza style?
