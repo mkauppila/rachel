@@ -113,6 +113,11 @@ class IRCClient(object):
 		command = 'NAMES %s' % channel_name
 		self.send_command_to_server(command)
 
+	def send_irc_message(self, channel, message):
+		self.logger.debug('send irc message to channel %s', channel)
+		command = 'PRIVMSG #%s :%s' % (channel, message)
+		self.send_command_to_server(command)
+
 	# Send response commands
 
 	def send_pong_with_response(self, original_message):
