@@ -8,38 +8,14 @@ import irc
 import parse
 import config
 
-option_parser = optparse.OptionParser()
-option_parser.add_option('-c', '--configuration-file',
-						 action='store',
-						 type='string',
-						 dest='configuration_file',
-						 help='select configuration file', 
-						 metavar='example.conf')
+# users eligible for ops
+op_list = ['_markus']
+# users eligible for voice
+voice_list = []
+# Users currently on the channel
+users = {}
 
-option_parser.add_option('-v', '--version',
-						 action='store_true',
-						 dest='version',
-						 help='show version information')
-
-(options, args) = option_parser.parse_args()
-
-if (options.version):
-	print "bot version 0.1"
-	sys.exit(0)
-
-configuration_file = config.default_configuration_file
-if options.configuration_file:
-	configuration_file = options.configuration_file
-config.load_configuration_from(configuration_file)
-
-HOST = config.host
-PORT = config.port
-LOG_FILE = config.log_file_name
-
-op_list = []
-voice_list = ['_markus']
-
-def set_up_logger():
+def set_up_file_logger(filename):
 	""" Sets up the logging facilities
 
 	Sets up the handlers for the root logger. The 
@@ -49,26 +25,12 @@ def set_up_logger():
 	logger = logging.getLogger()
 	logger.setLevel(logging.DEBUG)
 
-	handler = logging.FileHandler(LOG_FILE, mode='w')
+	handler = logging.FileHandler(filename, mode='w')
 	formatter = logging.Formatter("[%(levelname)s] %(name)s: %(message)s")
 	handler.setFormatter(formatter)
 	logger.addHandler(handler)
 	handler.close()
 
-set_up_logger()
-
-logger = logging.getLogger('main')
-
-client_logger = logging.getLogger('IRCClient')
-client = irc.IRCClient(HOST, PORT, client_logger)
-client.send_default_nick()
-client.send_default_user()
-
-channel_name = 'markus_vs_warkus'
-client.send_join_channel(channel_name)
-client.send_names_to_channel(channel_name)
-
-users = {}
 
 def handle_names(message):
 	""" Adds users of the channel based on NAMES list
@@ -85,6 +47,7 @@ def handle_names(message):
 			users[nick].mode = mode
 		else:
 			users[nick] = irc.UserInfo(nick, mode)
+
 
 def handle_join(message):
 	nick = parse.parse_nick_from_prefix(message.prefix)
@@ -108,12 +71,14 @@ def handle_join(message):
 	users[nick] = irc.UserInfo(nick, mode)
 	client.send_irc_message(channel_name, 'Hello %s' % nick)
 
+
 def handle_part(message):
 	nick = parse_nick_from_prefix(message.prefix)
 	logger.debug("nick parted: %s", nick)
 	if users.has_key(nick):
 		del users[nick]
 		logger.debug('removed "%s" from the users list' % nick)
+
 
 def handle_irc_messages(message):
 	""" Handle chat messages 
@@ -142,7 +107,6 @@ def handle_irc_messages(message):
 		pass
 
 
-
 def dispatch_message(message):
 	""" Dispatches the message to right handler function
 
@@ -167,10 +131,44 @@ def dispatch_message(message):
 		if message.trailing:
 			print message.trailing
 
-# The main loop 
-while True:
-	messages = client.get_messages()
-	for message in messages:
-		dispatch_message(message)
 
-client.disconnect()
+if __name__ == '__main__':
+	version_string = 'bot version 0.1'
+	option_parser = optparse.OptionParser(version=version_string)
+	option_parser.add_option('-c', 
+							 '--configuration-file',
+							 action='store',
+							 type='string',
+							 dest='configuration_file',
+							 help='select configuration file', 
+							 metavar='example.conf')
+
+	(options, args) = option_parser.parse_args()
+
+	log_file = config.log_file_name
+	set_up_file_logger(log_file)
+	logger = logging.getLogger('main')
+
+	host = config.host
+	port = config.port
+	client_logger = logging.getLogger('IRCClient')
+	client = irc.IRCClient(host, port, client_logger)
+	client.send_default_nick()
+	client.send_default_user()
+
+	channel_name = config.channel_name
+	client.send_join_channel(channel_name)
+	client.send_names_to_channel(channel_name)
+
+	configuration_file = config.default_configuration_file
+	if options.configuration_file:
+		configuration_file = options.configuration_file
+	config.load_configuration_from(configuration_file)
+
+	# The main loop 
+	while True:
+		messages = client.get_messages()
+		for message in messages:
+			dispatch_message(message)
+
+	client.disconnect()
