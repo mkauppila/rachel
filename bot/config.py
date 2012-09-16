@@ -1,25 +1,39 @@
 import ConfigParser
 
-# default config file 
-# note: this can't be overridden in configuration file
+# name of default configuration file
+# note: this value can't be overriden by configuration file
 default_configuration_file = 'bot.conf'
 
-
+# Variables who's values can be overriden by configuraiton file
+# They're set to their default values
 bots_name = 'booby'
 host = 'irc.freenode.com'
 port = '6667'
 channel_name = 'markus_vs_warkus'
 log_file_name = '%s.log' % bots_name
 
+def print_missing_section_warning(missing_section):
+    print ("Warning: Given configuration file is missing section '%s'"
+            % (missing_section))
+    print ("         Default values for the section will be used.")
+
+
 def load_configuration_from(configuration_file):
-    """
+    """ Load configuration file
+
+    Loads the given configuration file and sets the variables
+    in this module to the loaded values. If configuration file
+    doesn't have required section, a warning will be printed
+    and default values will be used.
+
+    Args:
+        configuration_file: Filename of the configuration file
+            that will be loaded
     """
     config = ConfigParser.ConfigParser()
-    if not config:
-        print "failed ot load configuration file"
     config.read(configuration_file)
 
-
+    # get access to config variables
     global host
     global port
     global channel_name
@@ -27,8 +41,10 @@ def load_configuration_from(configuration_file):
     global log_file_name
 
     section = ''
-    # Reads the section from the variable and uses it
-    # reading information from the configuration file
+    # Lambda simplifies loading the values from the sections
+    # of the configuration file. It uses the current value
+    # of section variable to access the right section in the
+    # aforementioned file.
     get = lambda name: config.get(section, name) 
 
     section = 'general'
@@ -37,19 +53,19 @@ def load_configuration_from(configuration_file):
         port = get('port')
         channel_name = get('channel_name')
     else:
-        print "configuration warning: %s is missing section %s" % (configuration_file, section)
+        print_missing_section_warning(section)
 
     section = 'logging'
     if config.has_section(section):
         log_file_name = get('log_file_name') 
     else:
-        print "configuration warning: %s is missing section %s" % (configuration_file, section)
+        print_missing_section_warning(section)
 
     section = 'bot'
     if config.has_section(section):
         bots_name = get('name')
     else:
-        print "configuration warning: %s is missing section %s" % (configuration_file, section)
+        print_missing_section_warning(section)
 
 
 def save_configuration_to(configuration_file):
