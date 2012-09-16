@@ -51,7 +51,7 @@ def handle_names(message):
 
 def handle_join(message):
 	nick = parse.parse_nick_from_prefix(message.prefix)
-	logger.debug("nick joined: %s", nick)
+	logger.debug("nick joined: '%s'", nick)
 
 	# Skip over if the bot itself joins
 	if nick == config.bots_name:
@@ -154,8 +154,8 @@ if __name__ == '__main__':
 	port = config.port
 	client_logger = logging.getLogger('IRCClient')
 	client = irc.IRCClient(host, port, client_logger)
-	client.send_default_nick()
-	client.send_default_user()
+	client.send_nick(config.bots_name)
+	client.send_user(config.bots_name, config.bots_real_name)
 
 	channel_name = config.channel_name
 	client.send_join_channel(channel_name)
@@ -168,6 +168,8 @@ if __name__ == '__main__':
 
 	# defines what happens when certain message is received
 	# from the IRC server
+	# Apparently, local variables of this scope are also
+	# accessible in these functions 
 	dispatch_table = {'PING' : client.send_pong_with_response,
 				      'PRIVMSG' : handle_irc_messages,
 				      'JOIN' : handle_join,

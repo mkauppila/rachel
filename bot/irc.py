@@ -42,6 +42,9 @@ class IRCClient(object):
 		self.connection = None
 		self.connect()
 
+	def __str__(self):
+		return self.host + ':' + self.port
+
 	def connect(self):
 		# Close old connection, before making a new one
 		if self.connection:
@@ -99,12 +102,12 @@ class IRCClient(object):
 
 	# Send canned commands to the server
 
-	def send_default_nick(self):
-		command = 'NICK booby'
+	def send_nick(self, nick):
+		command = 'NICK %s' % nick
 		self.send_command_to_server(command)
 		
-	def send_default_user(self):
-		command = 'USER booby 0 * : Botty Bot'
+	def send_user(self, nick, real_name):
+		command = 'USER %s 0 * : %s' % (nick, real_name)
 		self.send_command_to_server(command)
 
 	def send_join_channel(self, channel_name):
