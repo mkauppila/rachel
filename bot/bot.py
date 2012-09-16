@@ -16,7 +16,6 @@ voice_list = []
 # Users currently on the channel
 users = {}
 
-
 def set_up_file_logger(filename):
 	""" Sets up the logging facilities
 
@@ -125,6 +124,28 @@ def handle_nick_collision(message):
 	# Update the global config
 	config.bots_name = new_nick
 
+def handle_mode(message):
+	""" Changes mode for the users.
+
+		Args:
+		message: IRC server message as Message object
+	"""
+	if len(message.parameters) < 2:
+		return 
+
+	nick = message.parameters.pop()
+	full_mode = message.parameters.pop()
+	mode = full_mode[1]
+
+	logger.debug('%s received mode %s', nick, full_mode)
+
+	# verify that mode is correct
+	if mode in ['o', 'v']:
+		global users
+		nick = users[nick]
+		nick.mode = mode
+	else:
+		logger.debug("handle_mode: didn't recognize mode %s", mode)
 
 
 def dispatch_message(dispatch_table, message):
@@ -201,8 +222,9 @@ if __name__ == '__main__':
 				      'PRIVMSG' : handle_irc_messages,
 				      'JOIN' : handle_join,
 				      'PART' : handle_part,
+				      'MODE' : handle_mode,
 				      '353' : handle_names,
-				      '433'  : handle_nick_collision }
+				      '433' : handle_nick_collision }
 	while True:
 		messages = client.get_messages()
 		for message in messages:
