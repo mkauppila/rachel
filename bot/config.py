@@ -1,5 +1,10 @@
 import ConfigParser
 
+# default config file 
+# note: this can't be overridden in configuration file
+default_configuration_file = 'bot.conf'
+
+
 bots_name = 'booby'
 host = 'irc.freenode.com'
 port = '6667'
