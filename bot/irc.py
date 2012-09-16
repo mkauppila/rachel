@@ -53,8 +53,9 @@ class IRCClient(object):
 		self.logger.info('Connected to %s:%s', self.host, self.port)
 
 	def disconnect(self):
+		self.connection.shutdown(socket.SHUT_RDWR)
 		self.connection.close()
-		sel.logger.info('Disconnected from %s', self.host)
+		self.logger.info('Disconnected from %s', self.host)
 
 	def send_command_to_server(self, command):
 		""" Send command to IRC server.
@@ -83,6 +84,7 @@ class IRCClient(object):
 			network problems.
 		"""
 		data = self.connection.recv(4096)
+		# FIXME(mk): is this if statement needed?
 		if not data:
 			return None
 

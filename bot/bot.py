@@ -1,8 +1,9 @@
 #! /usr/bin/python
 
+import sys
+import signal
 import logging
 import optparse
-import sys
 
 import irc
 import parse
@@ -104,22 +105,18 @@ def handle_irc_messages(message):
 		pass
 
 
-def dispatch_message(message):
+def dispatch_message(dispatch_table, message):
 	""" Dispatches the message to right handler function
 
 	Args:
+		dispatch_table: A dictionary containing handlers
+			for messages. 
 		message: IRC server message as Message object
 	"""
 	logger.debug('Handle message: %s', message)
 
-	actions = {'PING' : client.send_pong_with_response,
-			   'PRIVMSG' : handle_irc_messages,
-			   'JOIN' : handle_join,
-			   'PART' : handle_part,
-			   '353' : handle_names }
-
 	try:
-		action = actions[message.command]
+		action = dispatch_table[message.command]
 		action(message)
 	except KeyError:
 		pass 
@@ -146,6 +143,13 @@ if __name__ == '__main__':
 	set_up_file_logger(log_file)
 	logger = logging.getLogger('main')
 
+	def clean_up_on_exit(signal_number, frame):
+		client.disconnect()
+		sys.exit(0)
+
+	signal.signal(signal.SIGINT,  clean_up_on_exit)
+	signal.signal(signal.SIGTERM, clean_up_on_exit)
+
 	host = config.host
 	port = config.port
 	client_logger = logging.getLogger('IRCClient')
@@ -162,10 +166,14 @@ if __name__ == '__main__':
 		configuration_file = options.configuration_file
 	config.load_configuration_from(configuration_file)
 
-	# The main loop 
+	# defines what happens when certain message is received
+	# from the IRC server
+	dispatch_table = {'PING' : client.send_pong_with_response,
+				      'PRIVMSG' : handle_irc_messages,
+				      'JOIN' : handle_join,
+				      'PART' : handle_part,
+				      '353' : handle_names }
 	while True:
 		messages = client.get_messages()
 		for message in messages:
-			dispatch_message(message)
-
-	client.disconnect()
+			dispatch_message(dispatch_table, message)
