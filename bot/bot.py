@@ -5,9 +5,13 @@ import logging
 import irc
 import parse
 
-HOST = 'irc.freenode.com'
-PORT = 6667
-LOG_FILE = 'bot.log'
+import config
+
+config.load_configuration_from('bot.conf')
+
+HOST = config.host
+PORT = config.port
+LOG_FILE = config.log_file_name
 
 op_list = []
 voice_list = ['_markus']
