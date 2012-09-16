@@ -27,15 +27,24 @@ def load_configuration_from(configuration_file):
     get = lambda name: config.get(section, name) 
 
     section = 'general'
-    host = get('host')
-    port = get('port')
-    channel_name = get('channel_name')
+    if config.has_section(section):
+        host = get('host')
+        port = get('port')
+        channel_name = get('channel_name')
+    else:
+        print "configuration warning: %s is missing section %s" % (configuration_file, section)
 
     section = 'logging'
-    log_file_name = get('log_file_name') 
+    if config.has_section(section):
+        log_file_name = get('log_file_name') 
+    else:
+        print "configuration warning: %s is missing section %s" % (configuration_file, section)
 
     section = 'bot'
-    bots_name = get('name')
+    if config.has_section(section):
+        bots_name = get('name')
+    else:
+        print "configuration warning: %s is missing section %s" % (configuration_file, section)
 
 
 def save_configuration_to(configuration_file):
