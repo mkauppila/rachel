@@ -127,6 +127,7 @@ def dispatch_message(dispatch_table, message):
 
 
 if __name__ == '__main__':
+	# Parse command line arguments
 	version_string = 'bot version 0.1'
 	option_parser = optparse.OptionParser(version=version_string)
 	option_parser.add_option('-c', 
@@ -139,10 +140,7 @@ if __name__ == '__main__':
 
 	(options, args) = option_parser.parse_args()
 
-	log_file = config.log_file_name
-	set_up_file_logger(log_file)
-	logger = logging.getLogger('main')
-
+	# set up signals
 	def clean_up_on_exit(signal_number, frame):
 		client.disconnect()
 		sys.exit(0)
@@ -150,6 +148,18 @@ if __name__ == '__main__':
 	signal.signal(signal.SIGINT,  clean_up_on_exit)
 	signal.signal(signal.SIGTERM, clean_up_on_exit)
 
+	# load configuration files
+	configuration_file = config.default_configuration_file
+	if options.configuration_file:
+		configuration_file = options.configuration_file
+	config.load_configuration_from(configuration_file)
+
+	# setup up loggin
+	log_file = config.log_file_name
+	set_up_file_logger(log_file)
+	logger = logging.getLogger('main')
+
+	# create irc client
 	host = config.host
 	port = config.port
 	client_logger = logging.getLogger('IRCClient')
@@ -161,11 +171,6 @@ if __name__ == '__main__':
 	client.send_join_channel(channel_name)
 	client.send_names_to_channel(channel_name)
 
-	configuration_file = config.default_configuration_file
-	if options.configuration_file:
-		configuration_file = options.configuration_file
-	config.load_configuration_from(configuration_file)
-
 	# defines what happens when certain message is received
 	# from the IRC server
 	# Apparently, local variables of this scope are also
@@ -174,7 +179,7 @@ if __name__ == '__main__':
 				      'PRIVMSG' : handle_irc_messages,
 				      'JOIN' : handle_join,
 				      'PART' : handle_part,
-				      '353' : handle_names }
+				      '353' : handle_names,
 	while True:
 		messages = client.get_messages()
 		for message in messages:
