@@ -8,6 +8,9 @@ HOST = 'irc.freenode.com'
 PORT = 6667
 LOG_FILE = 'bot.log'
 
+op_list = []
+voice_list = ['_markus']
+
 def set_up_logger():
 	""" Sets up the logging facilities
 
@@ -40,7 +43,7 @@ client.send_names_to_channel(channel_name)
 def parse_nick(nick):
 	""" @_markus => (_markus, '@') 
 	"""
-	modes = ['@', 'v']
+	modes = ['@', '+']
 	if nick[0] in modes:
 		return (nick[1:], nick)
 	else:
@@ -57,7 +60,7 @@ def parse_nick_from_prefix(prefix):
 
 users = {}
 
-def add_users(message):
+def handle_names(message):
 	""" Adds users of the channel based on NAMES list
 	"""
 	channel_name = message.parameters.pop()
@@ -83,6 +86,13 @@ def handle_join(message):
 	#	set the rights to mode variable
 	mode = None
 
+	if nick in op_list:
+		mode = 'o'
+		client.send_set_mode(channel_name, nick, "+o")
+	if nick in voice_list:
+		mode = 'v'
+		client.send_set_mode(channel_name, nick, "+v")
+
 	users[nick] = irc.UserInfo(nick, mode)
 	client.send_irc_message(channel_name, 'Hello %s' % nick)
 
@@ -105,16 +115,20 @@ def handle_irc_messages(message):
 	"""
 	trailing = message.trailing
 	# Did I get direct message?
-	got_direct_message = trailing.find('booby') == 0
+	got_direct_message = trailing.find('booby:') == 0
 	if got_direct_message:
 		client.send_irc_message(channel_name, "I'm not talking to you!")
 
 		# parse the trailing further and do something
-	else:
+	elif trailing.find('booby') > 0:
 		# if trailing == VERSION, just skip
 		# skip all not coming from right channel?
 		# Eliza style?
 		client.send_irc_message(channel_name, "Hey! Don't talk about me!")
+	else:
+		# they're just talking...
+		pass
+
 
 
 def dispatch_message(message):
@@ -129,7 +143,7 @@ def dispatch_message(message):
 			   'PRIVMSG' : handle_irc_messages,
 			   'JOIN' : handle_join,
 			   'PART' : handle_part,
-			   '353' : add_users }
+			   '353' : handle_names }
 
 	try:
 		action = actions[message.command]
