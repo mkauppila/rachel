@@ -16,6 +16,7 @@ voice_list = []
 # Users currently on the channel
 users = {}
 
+
 def set_up_file_logger(filename):
 	""" Sets up the logging facilities
 
@@ -104,6 +105,27 @@ def handle_irc_messages(message):
 		# they're just talking...
 		pass
 
+def handle_nick_collision(message):
+	""" Handles nick collision.
+
+	If bot's primary nick is in use, add underline
+	at the end and try again. This will keep adding
+	underlines under nick is unique.
+
+	If nick collision happens, the bot can't join
+	the channel. So send join request again
+
+	Args:
+		message: IRC server message as Message object
+	"""
+	nick_already_in_use = message.parameters.pop()
+	new_nick = nick_already_in_use + '_'
+	client.send_nick(new_nick)
+	client.send_join_channel(config.channel_name)
+	# Update the global config
+	config.bots_name = new_nick
+
+
 
 def dispatch_message(dispatch_table, message):
 	""" Dispatches the message to right handler function
@@ -180,6 +202,7 @@ if __name__ == '__main__':
 				      'JOIN' : handle_join,
 				      'PART' : handle_part,
 				      '353' : handle_names,
+				      '433'  : handle_nick_collision }
 	while True:
 		messages = client.get_messages()
 		for message in messages:

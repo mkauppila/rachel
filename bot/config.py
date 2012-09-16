@@ -64,7 +64,7 @@ def load_configuration_from(configuration_file):
 
     section = 'bot'
     if config.has_section(section):
-        bots_name = get('name')
+        bots_name = get('nick')
         bots_real_name = get('real_name')
     else:
         print_missing_section_warning(section)
