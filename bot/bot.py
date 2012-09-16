@@ -3,6 +3,7 @@
 import logging
 
 import irc
+import parse
 
 HOST = 'irc.freenode.com'
 PORT = 6667
@@ -40,24 +41,6 @@ channel_name = 'markus_vs_warkus'
 client.send_join_channel(channel_name)
 client.send_names_to_channel(channel_name)
 
-def parse_nick(nick):
-	""" @_markus => (_markus, '@') 
-	"""
-	modes = ['@', '+']
-	if nick[0] in modes:
-		return (nick[1:], nick)
-	else:
-		return (nick, None)
-
-def parse_nick_from_prefix(prefix):
-	""" Parse nick from the beginning of message prefix
-
-	Used by JOIN and PART message handlers.
-	"""
-	end_index  = prefix.find('!')
-	return prefix[0:end_index]
-
-
 users = {}
 
 def handle_names(message):
@@ -68,14 +51,16 @@ def handle_names(message):
 
 	full_nicks = message.trailing.split(' ')
 	for full_nick in full_nicks:
-		nick, mode = parse_nick(full_nick)
+		nick, mode = parse.parse_nick(full_nick)
 
-		# TODO(mk): if nick is already added, just update the mode
 
-		users[nick] = irc.UserInfo(nick, mode)
+		if users.has_key(nick):
+			users[nick].mode = mode
+		else:
+			users[nick] = irc.UserInfo(nick, mode)
 
 def handle_join(message):
-	nick = parse_nick_from_prefix(message.prefix)
+	nick = parse.parse_nick_from_prefix(message.prefix)
 	logger.debug("nick joined: %s", nick)
 
 	# Skip over if the bot itself joins

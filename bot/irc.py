@@ -1,6 +1,6 @@
 import socket
 
-import helpers
+import parse
 
 class Message(object):
 	""" Parsed server message.
@@ -87,9 +87,9 @@ class IRCClient(object):
 			return None
 
 		messages = []
-		raw_messages = helpers.parse_messages_from(data)
+		raw_messages = parse.parse_messages_from(data)
 		for raw_message in raw_messages:
-			message = helpers.parse_message(raw_message)
+			message = parse.parse_message(raw_message)
 			if message:
 				messages.append(message)
 

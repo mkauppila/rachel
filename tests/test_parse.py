@@ -1,9 +1,9 @@
 
 import unittest
 
-import helpers
+import parse
 
-class TestHelper(unittest.TestCase):
+class TestParse(unittest.TestCase):
 	""" Test parsing server messages.
 
 	Test that all the parts of server messages can be parsed properly.
@@ -16,7 +16,7 @@ class TestHelper(unittest.TestCase):
 		parameters = ['booby']
 		trailing = '- Thank you for using freenode!'
 		server_message = ':%s %s %s :%s' % (prefix, command, ''.join(parameters), trailing)
-		message = helpers.parse_message(server_message)
+		message = parse.parse_message(server_message)
 
 		self.assertEqual(message.prefix, prefix, 
 			'prefixes should match. expected: "%s", got "%s"' % (message.prefix, prefix))
@@ -32,7 +32,7 @@ class TestHelper(unittest.TestCase):
 		parameters = ['booby', '@', '#markus_vs_warkus']
 		trailing = '- Thank you for using freenode!'
 		server_message = '%s %s :%s' % (command, ' '.join(parameters), trailing)
-		message = helpers.parse_message(server_message)
+		message = parse.parse_message(server_message)
 
 
 		self.assertEqual(message.command, command,
@@ -47,8 +47,7 @@ class TestHelper(unittest.TestCase):
 		command = '353'
 		parameters = ['booby', '@', '#markus_vs_warkus']
 		server_message = ':%s %s %s' % (prefix, command, ' '.join(parameters))
-		message = helpers.parse_message(server_message)
-
+		message = parse.parse_message(server_message)
 
 		self.assertEqual(message.prefix, prefix, 
 			'prefixes should match. expected: "%s", got "%s"' % (message.prefix, prefix))
@@ -62,7 +61,7 @@ class TestHelper(unittest.TestCase):
 		parameters = ['booby', '#markus_vs_warkus']
 		trailing = 'End of /NAMES list.'
 		server_message = '%s %s :%s' % (command, ' '.join(parameters), trailing)
-		message = helpers.parse_message(server_message)
+		message = parse.parse_message(server_message)
 
 		self.assertEqual(message.command, command,
 			'commands should match, expected "%s", got "%s"' % (command, message.command))		
@@ -75,7 +74,7 @@ class TestHelper(unittest.TestCase):
 		command = 'PING'
 		trailing = 'zelazny.freenode.net'
 		server_message = '%s :%s' % (command, trailing)
-		message = helpers.parse_message(server_message)
+		message = parse.parse_message(server_message)
 
 		self.assertEqual(message.command, command,
 			'commands should match, expected "%s", got "%s"' % (command, message.command))		
@@ -83,12 +82,12 @@ class TestHelper(unittest.TestCase):
 			'trailings should match, expected "%s", got "%s"' % (trailing, message.trailing))
 
 	def test_parse_non_existant_message(self):
-		message = helpers.parse_message('')
+		message = parse.parse_message('')
 		self.assertEqual(message, None, "Message should be None")
 
-		message = helpers.parse_message(None)
+		message = parse.parse_message(None)
 		self.assertEqual(message, None, "Message should be None")
 
 
 def make_suite():
-	return unittest.makeSuite(TestHelper, 'test')
+	return unittest.makeSuite(TestParse, 'test')

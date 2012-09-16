@@ -1,5 +1,30 @@
 import irc
 
+def parse_nick(nick):
+	""" Separates nick from the mode characters.
+
+	Examples:
+		parse_nick('@_markus') => (_markus, 'o')
+		parse_nick('+_markus') => ('_markus', 'v')
+	"""
+
+	converter = {'@' : 'o', '+' : 'v'}
+
+	modes = converter.keys()
+	first_character = nick[0]
+	if first_character in modes:
+		return (nick[1:], converter[first_character])
+	else:
+		return (nick, None)
+
+def parse_nick_from_prefix(prefix):
+	""" Parse nick from the beginning of message prefix
+
+	Used by JOIN and PART message handlers.
+	"""
+	end_index  = prefix.find('!')
+	return prefix[0:end_index]
+
 def parse_messages_from(data):
 	""" Separate server messages 
 	"""
