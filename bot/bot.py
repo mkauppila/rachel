@@ -70,7 +70,7 @@ def handle_join(message):
 
 
 def handle_part(message):
-	nick = parse_nick_from_prefix(message.prefix)
+	nick = parse.parse_nick_from_prefix(message.prefix)
 	logger.debug("nick parted: %s", nick)
 	if users.has_key(nick):
 		del users[nick]
@@ -88,11 +88,22 @@ def handle_irc_messages(message):
 		    message received from the server.
 	"""
 	trailing = message.trailing
+	message_sender = parse.parse_nick_from_prefix(message.prefix)
+
 	highlighted_name = "%s:" % config.bots_name
 	# Did I get direct message?
 	got_direct_message = trailing.find(highlighted_name) == 0
 	if got_direct_message:
-		client.send_irc_message(channel_name, "I'm not talking to you!")
+		# parse the actual message
+		start_index = trailing.find(':') + 1
+		message = trailing[start_index:].strip(' ')
+		logger.debug("direct message: '%s'", message)
+
+		if message == '!op':
+			if message_sender in op_list:
+				client.send_set_mode(channel_name, message_sender, "+o")
+			else:
+				client.send_irc_message(channel_name, "Sorry, can't op you")
 
 		# parse the trailing further and do something
 	elif trailing.find(config.bots_name) > 0:
