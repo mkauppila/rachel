@@ -117,8 +117,19 @@ def handle_irc_messages(message):
 		client.send_irc_message(channel_name, "Hey! Don't talk about me!")
 
 
-def handle_message(message):
+def dispatch_message(message):
+	""" Dispatches the message to right handler function
+
+	Args:
+		message: IRC server message as Message object
+	"""
 	logger.debug('Handle message: %s', message)
+
+	actions = {'PING' : client.send_pong_with_response,
+			   'PRIVMSG' : handle_irc_messages,
+			   'JOIN' : handle_join,
+			   'PART' : handle_part,
+			   '353' : add_users }
 
 	try:
 		action = actions[message.command]
@@ -134,6 +145,6 @@ def handle_message(message):
 while True:
 	messages = client.get_messages()
 	for message in messages:
-		handle_message(message)
+		dispatch_message(message)
 
 client.disconnect()
