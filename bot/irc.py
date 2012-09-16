@@ -20,19 +20,8 @@ class Message(object):
 								self.parameters, self.trailing)
 
 
-def add_command_terminator(command):
-	""" Add terminator characters.
-
-	Adds '\r\n' to the end of the command.
-
-	Return:
-		Properly terminated command, ready for sending
-	"""
-	return command + '\r\n';
-
-
 class IRCClient(object):
-	""" Handles communication with the IRC server
+	""" Handles communication with a IRC server.
 	"""
 
 	def __init__(self, host, port, logger):
@@ -58,8 +47,18 @@ class IRCClient(object):
 		sel.logger.info('Disconnected from %s', self.host)
 
 	def send_command_to_server(self, command):
+		""" Send command to IRC server.
+
+		Method adds the terminator characters 
+		'\r\n' to the command before sending it.
+
+		Args:
+			command: String containing valid IRC command
+			    without separator characters.
+		"""
 		self.logger.debug('send command: %s', command)
-		command = add_command_terminator(command)
+
+		command = command + '\r\n'
 		self.connection.send(command)
 
 	def get_messages(self):
@@ -100,7 +99,13 @@ class IRCClient(object):
 		command  = 'JOIN #%s' % channel_name
 		self.send_command_to_server(command)
 
-	def send_pong_with_response(self, response):
+	def send_names_to_channel(self, channel_name):
+		command = 'NAMES %s' % channel_name
+		self.send_command_to_server(command)
+
+	# Send response commands
+
+	def send_pong_with_response(self, original_message):
+		response = original_message.trailing
 		command = 'PONG %s' % response
 		self.send_command_to_server(command)
-	
