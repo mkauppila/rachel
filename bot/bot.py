@@ -16,6 +16,7 @@ voice_list = []
 # Users currently on the channel
 users = {}
 
+
 def set_up_file_logger(filename):
 	""" Sets up the logging facilities
 
@@ -35,6 +36,10 @@ def set_up_file_logger(filename):
 
 def handle_names(message):
 	""" Adds users of the channel based on NAMES list
+
+	Args:
+		message: Message object representing the original
+		    message received from the server.
 	"""
 	channel_name = message.parameters.pop()
 	logger.debug('names channel name: %s', channel_name)
@@ -50,6 +55,12 @@ def handle_names(message):
 
 
 def handle_join(message):
+	""" Handles joining users
+
+	Args:
+		message: Message object representing the original
+		    message received from the server.
+	"""
 	nick = parse.parse_nick_from_prefix(message.prefix)
 	logger.debug("nick joined: '%s'", nick)
 
@@ -60,16 +71,22 @@ def handle_join(message):
 	mode = None
 	if nick in op_list:
 		mode = 'o'
-		client.send_set_mode(channel_name, nick, "+o")
+		client.send_set_mode_for_user(channel_name, nick, "+o")
 	elif nick in voice_list:
 		mode = 'v'
-		client.send_set_mode(channel_name, nick, "+v")
+		client.send_set_mode_for_user(channel_name, nick, "+v")
 
 	users[nick] = irc.UserInfo(nick, mode)
 	client.send_irc_message(channel_name, 'Hello %s' % nick)
 
 
 def handle_part(message):
+	""" Handles parting users
+
+	Args:
+		message: Message object representing the original
+		    message received from the server.
+	"""
 	nick = parse.parse_nick_from_prefix(message.prefix)
 	logger.debug("nick parted: %s", nick)
 	if users.has_key(nick):
@@ -208,7 +225,7 @@ if __name__ == '__main__':
 		configuration_file = options.configuration_file
 	config.load_configuration_from(configuration_file)
 
-	# setup up loggin
+	# setup up logging
 	log_file = config.log_file_name
 	set_up_file_logger(log_file)
 	logger = logging.getLogger('main')
@@ -228,7 +245,7 @@ if __name__ == '__main__':
 	# defines what happens when certain message is received
 	# from the IRC server
 	# Apparently, local variables of this scope are also
-	# accessible in these functions 
+	# accessible in functions added to dispatch_table 
 	dispatch_table = {'PING' : client.send_pong_with_response,
 				      'PRIVMSG' : handle_irc_messages,
 				      'JOIN' : handle_join,
