@@ -16,7 +16,51 @@ voice_list = []
 # Users currently on the channel
 users = {}
 
+class DiscussionLog(object):
+	""" DiscussionLog handles logging the IRC discussion.
 
+	Decided to write DiscussionLog class since implementing the
+	IRC discussion logging using Python's default logging module
+	felt inelegant. Particularly using critical logging level
+	for chat logging and the fact the changing logging level might
+	have disabled the logging otherwise.
+	"""
+
+	def __init__(self, log_filename, buffer_size=1):
+		""" Creates instance of DiscussionLog
+
+		Args:
+			log_filename: Name of the log file. The logger will log the 
+				discussion in this file. If the file doesn't exists,
+				it will be created. Otherwise, it'll be appended.
+			buffer_size: Buffer size for the log file. By default the
+				access is line buffered.
+		"""
+		self.log_file = open(log_filename, 'a', buffer_size)
+
+	def close(self):
+		""" Closes the log file
+		"""
+		self.log_file.close()
+
+	def log(self, message, user=None):
+		""" Write the message by nick to the log file
+
+		If user is None, only the message is logged. 
+
+		Args:
+			message: IRC chat message that'll be logged
+			user: who said message as User object.
+				Defaults to None.
+		"""
+		if user:
+			line = '<%s> %s\n' % (user, message)
+		else:
+			line = '%s\n' % (message)
+		self.log_file.write(line)
+
+
+# FIXM(mk): rename to set_up_debug_logging
 def set_up_file_logger(filename):
 	""" Sets up the logging facilities
 
@@ -107,6 +151,13 @@ def handle_irc_messages(message):
 	trailing = message.trailing
 	message_sender = parse.parse_nick_from_prefix(message.prefix)
 
+
+	# Log the message
+	user = users[message_sender]
+	channel_logger.log(trailing, user)
+
+
+	# Process the message
 	highlighted_name = "%s:" % config.bots_name
 	# Did I get direct message?
 	got_direct_message = trailing.find(highlighted_name) == 0
@@ -213,6 +264,7 @@ if __name__ == '__main__':
 
 	# set up signals
 	def clean_up_on_exit(signal_number, frame):
+		channel_logger.close()
 		client.disconnect()
 		sys.exit(0)
 
@@ -242,6 +294,9 @@ if __name__ == '__main__':
 	client.send_join_channel(channel_name)
 	client.send_names_to_channel(channel_name)
 
+	channel_logger = DiscussionLog('%s.irc' % channel_name)
+	channel_logger.log('starts logging: %s' % channel_name)
+
 	# defines what happens when certain message is received
 	# from the IRC server
 	# Apparently, local variables of this scope are also
@@ -257,3 +312,6 @@ if __name__ == '__main__':
 		messages = client.get_messages()
 		for message in messages:
 			dispatch_message(dispatch_table, message)
+
+	channel_logger.close()
+	client.disconnect()

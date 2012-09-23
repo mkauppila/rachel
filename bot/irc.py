@@ -24,10 +24,14 @@ class UserInfo(object):
 	"""
 	def __init__(self, nick, mode):
 		self.nick = nick
+		# Verify the user
+		if mode not in ['o', 'v']:
+			mode = None
 		self.mode = mode
 
 	def __str__(self):
-		return mode + nick
+		character_mode = self.mode == 'o' and '@' or '+'
+		return character_mode + self.nick
 
 
 class IRCClient(object):
