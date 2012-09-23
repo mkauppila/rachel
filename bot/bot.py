@@ -78,6 +78,34 @@ def set_up_file_logger(filename):
 	handler.close()
 
 
+def handle_bot_mode_change(mode):
+	""" Handles mode changes for the bot
+
+	Args:
+		mode: 'v' or 'o' depending which one is bot's new mode
+	"""
+	if mode == 'v':
+		client.send_irc_message(channel_name, "I got voice :( I need ops!")
+	elif mode == 'o':
+		client.send_irc_message(channel_name, "Yay, I got ops!")
+		try_to_set_channel_modes()
+	else:
+		logger.debug('handle_bot_mode_change: unrecognized mode %s', mode)
+
+	logger.debug('Handle bot mode change: %s', mode)
+
+
+def try_to_set_channel_modes():
+	""" Try to set the channel modes.
+
+	"""
+	if config.should_set_channel_mode == False:
+		return 
+
+	client.send_set_channel_mode_to(channel_name, config.channel_mode)
+	logger.debug('set channel mode: %s', config.channel_mode)
+
+
 def handle_names(message):
 	""" Adds users of the channel based on NAMES list
 
@@ -92,11 +120,16 @@ def handle_names(message):
 	for full_nick in full_nicks:
 		nick, mode = parse.parse_nick(full_nick)
 
+		if nick == config.bots_name:
+			handle_bot_mode_change(mode)
+
 		if users.has_key(nick):
 			users[nick].mode = mode
 		else:
 			users[nick] = irc.UserInfo(nick, mode)
 
+	# Try this, it'll fail if the bot doesn't have ops
+	try_to_set_channel_modes()
 
 def handle_join(message):
 	""" Handles joining users
@@ -167,9 +200,11 @@ def handle_irc_messages(message):
 		message = trailing[start_index:].strip(' ')
 		logger.debug("direct message: '%s'", message)
 
+		# parse message.split(' ') -> 
+
 		if message == '!op':
 			if message_sender in op_list:
-				client.send_set_mode(channel_name, message_sender, "+o")
+				client.send_set_mode_for_user(channel_name, message_sender, "+o")
 			else:
 				client.send_irc_message(channel_name, "Sorry, can't op you")
 
@@ -179,9 +214,7 @@ def handle_irc_messages(message):
 		# skip all not coming from right channel?
 		# Eliza style?
 		client.send_irc_message(channel_name, "Hey! Don't talk about me!")
-	else:
-		# they're just talking...
-		pass
+	
 
 def handle_nick_collision(message):
 	""" Handles nick collision.
@@ -214,15 +247,19 @@ def handle_mode(message):
 
 	nick = message.parameters.pop()
 	full_mode = message.parameters.pop()
-	mode = full_mode[1]
+	# full_mode is either +o or +v, we need only need the letter
+	mode = full_mode[1] 
 
 	logger.debug('%s received mode %s', nick, full_mode)
 
 	# verify that mode is correct
 	if mode in ['o', 'v']:
 		global users
-		nick = users[nick]
-		nick.mode = mode
+		user = users[nick]
+		user.mode = mode
+
+		if nick == config.bots_name:
+			handle_bot_mode_change(mode)
 	else:
 		logger.debug("handle_mode: didn't recognize mode %s", mode)
 

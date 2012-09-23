@@ -11,6 +11,8 @@ bots_real_name = 'Boobie bot'
 host = 'irc.freenode.com'
 port = '6667'
 channel_name = 'markus_vs_warkus'
+should_set_channel_mode = True
+channel_mode = '+mnt'
 log_file_name = '%s.log' % bots_name
 
 def print_missing_section_warning(missing_section):
@@ -38,6 +40,8 @@ def load_configuration_from(configuration_file):
     global host
     global port
     global channel_name
+    global channel_mode
+    global should_set_channel_mode
     global bots_name
     global log_file_name
 
@@ -53,6 +57,8 @@ def load_configuration_from(configuration_file):
         host = get('host')
         port = get('port')
         channel_name = get('channel_name')
+        should_set_channel_mode = get('should_set_channel_mode')
+        channel_mode = get('channel_mode')
     else:
         print_missing_section_warning(section)
 
